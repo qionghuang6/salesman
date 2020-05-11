@@ -2,6 +2,7 @@
 
 import sys
 import random
+import statistics
 
 class Dataset:
     def __init__(self, data):
@@ -52,6 +53,17 @@ def getDataset(name):
     f.close()
     return [minPath,xcoords,ycoords,bestpath]
 
+def swap(thelist,cell1,cell2):
+    contents2 = thelist[cell2]
+    thelist[cell2] = thelist[cell1]
+    thelist[cell1] = contents2
+
+#probability between 0 and 1
+def mutate(path, probability):
+    for i in range(0,len(path.order)):
+        if(random.random() < probability):
+            swap(path.order,i,random.randint(0,len(path.order)-1))
+
 def mate(path1, path2):
     num = random.randint(0,len(path1.order)-1)
     sectionlen = random.randint(1,len(path1.order)-1)
@@ -75,11 +87,10 @@ def mate(path1, path2):
 def getFit(path):
     return path.fitness
 
-def main():
-    setname = 'A9-2'
-    population = 100
-    generations = 100
-    myDataset = Dataset(getDataset(setname))
+def calculatepath(pathname, population, generations, mutation):
+    bestcalclen = 1000000000
+    bestorder = list()
+    myDataset = Dataset(getDataset(pathname))
     paths = list()
     #Set up population
     i = 0
@@ -89,15 +100,21 @@ def main():
         paths.append(Path(myDataset.coords,newOrder))
         i += 1
     # print(paths[0].order)
+    # for i in range(0,25):
+    #     mutate(paths[0], 0.05)
+    #     print(paths[0].order)
     # print(paths[1].order)
     # print(mate(paths[0],paths[1]).order)
     j = 0
     while (j < generations):
+        for path in paths:
+            mutate(path,mutation)
         weights = list()
         newPaths = list()
         for myPath in paths:
-            weights.append(myPath.fitness)
+            weights.append((1000*(myPath.fitness))**2.5)
         k = 0
+        #print (round(statistics.mean(weights),2))
         while(k < len(paths)):
             choice1 = random.choices(paths,weights)[0]
             choice2 = random.choices(paths,weights)[0]
@@ -105,13 +122,24 @@ def main():
             k += 1
         paths = newPaths
         j += 1
-    paths.sort(reverse = True, key = getFit)
-    print("Calculated Path Length:", round(paths[0].len,3), "Best Path Length:", myDataset.minPath)
+        paths.sort(reverse = True, key = getFit)
+        if(paths[0].len < bestcalclen):
+            bestcalclen = paths[0].len
+            bestorder = paths[0].order
+    print(pathname, "Calculated:", round(bestcalclen,3), "Best:", myDataset.minPath, "Ratio", round(bestcalclen / myDataset.minPath, 3))
+    writestring = pathname + "\n"
+    writestring += ",".join(list(map(lambda a : str(a), bestorder)))
+    writestring += "\n\n"
+    return writestring
 
-    writefile = open("results.csv", 'w')
-    writestring = setname + "\n"
-    writestring += ",".join(list(map(lambda a : str(a), paths[0].order)))
-    writefile.write(writestring)
+def main():
+    datasetlist = "A4,A8,A9,A9-2,A10,A11,A12,A12-2,A13,A13-2,A30,A50".split(',')
+    #datasetlist = "A30,A50".split(',')
+    #print(len(datasetlist))
+    open('newresults.csv', 'w').close()
+    writefile = open("newresults.csv", 'a')
+    for dataset in datasetlist: 
+        writefile.write(calculatepath(dataset,100,500,0.025))
     writefile.close()
 
 main()
