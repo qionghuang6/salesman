@@ -112,7 +112,7 @@ def calculatepath(pathname, population, generations, mutation):
         weights = list()
         newPaths = list()
         for myPath in paths:
-            weights.append((1000*(myPath.fitness))**2.5)
+            weights.append(myPath.fitness**6)
         k = 0
         #print (round(statistics.mean(weights),2))
         while(k < len(paths)):
@@ -133,13 +133,13 @@ def calculatepath(pathname, population, generations, mutation):
     return writestring
 
 def main():
-    datasetlist = "A4,A8,A9,A9-2,A10,A11,A12,A12-2,A13,A13-2,A30,A50".split(',')
-    #datasetlist = "A30,A50".split(',')
+    #datasetlist = "A4,A8,A9,A9-2,A10,A11,A12,A12-2,A13,A13-2,A30,A50".split(',')
+    datasetlist = "A30,A50".split(',')
     #print(len(datasetlist))
     open('newresults.csv', 'w').close()
     writefile = open("newresults.csv", 'a')
     for dataset in datasetlist: 
-        writefile.write(calculatepath(dataset,100,500,0.025))
+        writefile.write(calculatepath(dataset,200,10000,0.005))
     writefile.close()
 
 main()
